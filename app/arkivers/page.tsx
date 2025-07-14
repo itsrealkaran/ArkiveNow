@@ -73,8 +73,8 @@ export default function ArkiversPage() {
           </button>
         </Header>
         <main className="flex flex-col items-center justify-center flex-1 w-full">
-          <div className="w-full max-w-5xl px-2 sm:px-4 md:px-8 bg-[#fefdf9]/70 rounded-2xl border border-[#b4defc] shadow-inner">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 overflow-y-auto max-h-[calc(100vh-220px)] py-6">
+          <div className="w-full px-2 bg-[#fefdf9]/70 rounded-2xl border border-[#b4defc] shadow-inner">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 overflow-y-auto max-h-[calc(100vh-180px)] py-8 px-4">
               {arkivers.map((arkiver, idx) => (
                 <div
                   key={arkiver.id}
