@@ -24,3 +24,26 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+::-webkit-scrollbar {
+  width: 4px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b4defc;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #71afd4;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #b4defc transparent;
+}
