@@ -81,17 +81,13 @@ export default function ArkiversPage() {
                   className="bg-[#fffbe9]/90 border-2 border-[#ffe066] rounded-2xl px-6 py-6 shadow-[2px_4px_0_#ffe066,0_2px_16px_rgba(255,224,102,0.10)] flex flex-col items-center text-center cartoon-card hover:scale-105 hover:shadow-lg transition-transform duration-200 relative cursor-pointer group"
                   style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
                   onClick={() =>
-                    router.push(
-                      `/arkivers/${arkiver.username.replace(/^@/, "")}`
-                    )
+                    router.push(`/${arkiver.username.replace(/^@/, "")}`)
                   }
                   tabIndex={0}
                   role="button"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ")
-                      router.push(
-                        `/arkivers/${arkiver.username.replace(/^@/, "")}`
-                      );
+                      router.push(`/${arkiver.username.replace(/^@/, "")}`);
                   }}
                   aria-label={`View profile of ${arkiver.displayName}`}
                 >
