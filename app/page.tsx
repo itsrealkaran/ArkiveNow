@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { sampleTweets } from "@/types/tweet";
 import { ShowcaseCard } from "@/component/explore/tweet";
+import Header from "@/component/explore/Header";
 import { useRouter } from "next/navigation";
 
 const FILTERS = ["Latest", "Oldest", "Popular"];
@@ -104,40 +105,22 @@ export default function Home() {
     >
       <div className="w-[95vw] sm:w-[90vw] md:w-[85vw] flex flex-col flex-1 min-h-[calc(100vh-4rem)]">
         {/* Header, Search, Filter */}
-        <header
-          className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full px-3 sm:px-6 py-2 sm:py-3 mb-2 mt-2 bg-[#fefdf9]/90 border-2 border-[#b4defc] rounded-2xl shadow-[2px_4px_0_#b4defc,0_2px_16px_rgba(180,222,252,0.10)]"
-          style={{
-            fontFamily: "Comic Sans MS, cursive, sans-serif",
-            boxShadow: "2px 4px 0 #b4defc, 0 2px 16px rgba(180,222,252,0.10)",
-          }}
-        >
-          <span
-            className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-[#71afd4] drop-shadow-[2px_2px_0_#b4defc] select-none tracking-tight mb-1 sm:mb-0"
-            style={{
-              fontFamily: "Comic Sans MS, cursive, sans-serif",
-              letterSpacing: "-0.03em",
-              textShadow: "2px 2px 0 #b4defc",
-            }}
+        <Header title="ArkiveNow">
+          <button
+            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#ffe066] text-[#ffb347] font-bold border-2 border-[#ffb347] shadow-[2px_2px_0_#ffb347] hover:bg-[#ffb347] hover:text-white transition-all duration-150 text-xs sm:text-base"
+            style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
+            onClick={() => router.push("/arkivers")}
           >
-            ArkiveNow
-          </span>
-          <nav className="flex gap-2 sm:gap-4">
-            <button
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#ffe066] text-[#ffb347] font-bold border-2 border-[#ffb347] shadow-[2px_2px_0_#ffb347] hover:bg-[#ffb347] hover:text-white transition-all duration-150 text-xs sm:text-base"
-              style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
-              onClick={() => router.push("/arkivers")}
-            >
-              Arkivers
-            </button>
-            <button
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#b4defc] text-[#71afd4] font-bold border-2 border-[#71afd4] shadow-[2px_2px_0_#71afd4] hover:bg-[#71afd4] hover:text-white transition-all duration-150 text-xs sm:text-base"
-              style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
-              onClick={() => router.push("/verify")}
-            >
-              Verify
-            </button>
-          </nav>
-        </header>
+            Arkivers
+          </button>
+          <button
+            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#b4defc] text-[#71afd4] font-bold border-2 border-[#71afd4] shadow-[2px_2px_0_#71afd4] hover:bg-[#71afd4] hover:text-white transition-all duration-150 text-xs sm:text-base"
+            style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
+            onClick={() => router.push("/verify")}
+          >
+            Verify
+          </button>
+        </Header>
         <div className="flex justify-end sm:mr-32 md:mr-52 mr-0 w-[calc(100%-52px)] z-10">
           <div className="flex items-center bg-white bg-opacity-90 border-2 sm:border-4 border-r-0 border-[#b4defc] rounded-l-full px-2 md:px-4 sm:px-3 py-1 md:py-2 sm:py-1.5 w-[60vw] sm:w-[320px] md:w-[380px]">
             <Search className="size-4 sm:size-5 md:size-6 text-[#b4defc] mr-1.5 sm:mr-2" />
