@@ -71,17 +71,18 @@ function useColumnCount() {
 
 export default function Home() {
   const [selected, setSelected] = useState("Latest");
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchQuery: string = "";
   const columnCount = useColumnCount();
   const router = useRouter();
   // Filtered data
   const filteredData = showcaseData.filter(
     (item) =>
-      searchQuery === "" ||
-      item.tweet.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.tweet.user?.displayName
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase())
+      typeof searchQuery === "string" &&
+      (searchQuery === "" ||
+        item.tweet.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.tweet.user?.displayName
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()))
   );
 
   // Split into columns
