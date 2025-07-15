@@ -10,37 +10,6 @@ import { useRouter } from "next/navigation";
 
 const FILTERS = ["Latest", "Oldest", "Popular"];
 
-// Sample showcase data with transaction IDs
-const showcaseImages = [
-  "/tweet-1.png",
-  "/tweet-2.jpg",
-  "/tweet-4.jpg",
-  "/tweet-6.png",
-];
-
-// const DUMMY_CARDS: ArkiveCardProps[] = [
-//   {
-//     image: "/tweet-1.png",
-//     txId: "TxID_1234567890abcdef",
-//     link: "https://arweave.org/tx/1234567890abcdef",
-//   },
-//   {
-//     image: "/tweet-2.jpg",
-//     txId: "TxID_abcdef1234567890",
-//     link: "https://arweave.org/tx/abcdef1234567890",
-//   },
-//   {
-//     image: "/tweet-4.jpg",
-//     txId: "TxID_9876543210fedcba",
-//     link: "https://arweave.org/tx/9876543210fedcba",
-//   },
-//   {
-//     image: "/tweet-6.png",
-//     txId: "TxID_1122334455667788",
-//     link: "https://arweave.org/tx/1122334455667788",
-//   },
-// ];
-
 // Responsive column count hook
 function useColumnCount() {
   const [width, setWidth] = useState(1200);
