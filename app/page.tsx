@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { sampleTweets } from "@/types/tweet";
 import { ShowcaseCard } from "@/component/explore/tweet";
-import Header from "@/component/explore/Header";
+import Header from "@/component/explore/header";
 import { useRouter } from "next/navigation";
 
 const FILTERS = ["Latest", "Oldest", "Popular"];

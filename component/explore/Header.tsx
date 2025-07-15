@@ -1,5 +1,7 @@
 "use client";
+
 import React from "react";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   title: string;
@@ -13,7 +15,9 @@ const Header: React.FC<HeaderProps> = ({
   showBack,
   onBack,
   children,
-}) => (
+}) => {
+  const router = useRouter();
+  return (
   <header
     className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full px-3 sm:px-6 py-2 sm:py-3 mb-2 mt-2 bg-[#fefdf9]/90 border-2 border-[#b4defc] rounded-2xl shadow-[2px_4px_0_#b4defc,0_2px_16px_rgba(180,222,252,0.10)]"
     style={{
@@ -38,12 +42,14 @@ const Header: React.FC<HeaderProps> = ({
           letterSpacing: "-0.03em",
           textShadow: "2px 2px 0 #b4defc",
         }}
+        onClick={() => router.push("/")}
       >
         {title}
       </span>
     </div>
     <nav className="flex gap-2 sm:gap-4 ml-2">{children}</nav>
   </header>
-);
+  );
+};
 
 export default Header;
