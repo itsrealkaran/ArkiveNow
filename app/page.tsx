@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
-import { sampleTweets } from "@/types/tweet";
 import { showcaseData } from "./showcaseData";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import Header from "@/component/explore/header";
