@@ -17,7 +17,7 @@ const showcaseImages = [
   "/tweet-4.jpg",
   "/tweet-6.png",
 ];
-const showcaseData = sampleTweets.map((tweet, index) => ({
+export const showcaseData = sampleTweets.map((tweet, index) => ({
   id: tweet.id,
   tweet: tweet,
   image: showcaseImages[index % showcaseImages.length],
