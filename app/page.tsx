@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { sampleTweets } from "@/types/tweet";
+import { showcaseData } from "./showcaseData";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import Header from "@/component/explore/header";
 import { useRouter } from "next/navigation";
@@ -17,17 +18,6 @@ const showcaseImages = [
   "/tweet-4.jpg",
   "/tweet-6.png",
 ];
-export const showcaseData = sampleTweets.map((tweet, index) => ({
-  id: tweet.id,
-  tweet: tweet,
-  image: showcaseImages[index % showcaseImages.length],
-  transactionId: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random()
-    .toString(16)
-    .substr(2, 4)}`,
-  timestamp: new Date(
-    Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
-  ).toISOString(),
-}));
 
 // const DUMMY_CARDS: ArkiveCardProps[] = [
 //   {
@@ -76,7 +66,7 @@ export default function Home() {
   const router = useRouter();
   // Filtered data
   const filteredData = showcaseData.filter(
-    (item) =>
+    (item: (typeof showcaseData)[number]) =>
       typeof searchQuery === "string" &&
       (searchQuery === "" ||
         item.tweet.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -91,7 +81,7 @@ export default function Home() {
     { length: columnCount },
     () => []
   );
-  filteredData.forEach((item, i) => {
+  filteredData.forEach((item: (typeof showcaseData)[number], i: number) => {
     columns[i % columnCount].push(item);
   });
 

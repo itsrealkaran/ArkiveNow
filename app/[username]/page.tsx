@@ -2,7 +2,7 @@
 import React from "react";
 import { useRouter, useParams } from "next/navigation";
 import Header from "@/component/explore/header";
-import { showcaseData } from "../page";
+import { showcaseData } from "@/app/showcaseData";
 import { ShowcaseCard } from "@/component/explore/tweet";
 
 // Sample Arkivers data
