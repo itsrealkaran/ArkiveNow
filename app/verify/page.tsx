@@ -4,8 +4,10 @@ import React, { useState } from "react";
 import { showcaseData } from "../showcaseData";
 import Header from "@/component/explore/header";
 import { ShowcaseCard } from "@/component/explore/tweet";
+import { useRouter } from "next/navigation";
 
 export default function VerifyPage() {
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [result, setResult] = useState<
     null | (typeof showcaseData)[number] | false
@@ -28,26 +30,40 @@ export default function VerifyPage() {
       }}
     >
       <div className="w-[95vw] sm:w-[90vw] md:w-[85vw] flex flex-col flex-1 min-h-[calc(100vh-4rem)]">
-        <Header title="ArkiveNow" />
+        <Header title="ArkiveNow">
+          <button
+            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#ffe066] text-[#ffb347] font-bold border-2 border-[#ffb347] shadow-[2px_2px_0_#ffb347] hover:bg-[#ffb347] hover:text-white transition-all duration-150 text-xs sm:text-base"
+            style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
+            onClick={() => router.push("/arkivers")}
+          >
+            Arkivers
+          </button>
+          <button
+            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#b4defc] text-[#71afd4] font-bold border-2 border-[#71afd4] shadow-[2px_2px_0_#71afd4] hover:bg-[#71afd4] hover:text-white transition-all duration-150 text-xs sm:text-base"
+            style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
+            onClick={() => router.push("/verify")}
+          >
+            Verify
+          </button>
+        </Header>
         <main className="flex flex-col items-center justify-center flex-1 w-full pt-8">
           {/* Cartoon Card */}
-          <div className="relative flex flex-col items-center w-full max-w-lg">
+          <div className="relative flex flex-col items-center w-full max-w-lg px-2 sm:px-0">
             <form
               onSubmit={handleSubmit}
-              className="bg-[#fffbe9]/90 border-4 border-[#b4defc] rounded-3xl px-8 py-10 shadow-[4px_8px_0_#b4defc,0_2px_24px_rgba(180,222,252,0.10)] flex flex-col items-center gap-4 w-full relative z-10"
+              className="bg-[#fffbe9]/90 border-2 sm:border-4 border-[#b4defc] rounded-3xl px-4 sm:px-8 py-6 sm:py-10 shadow-[4px_8px_0_#b4defc,0_2px_24px_rgba(180,222,252,0.10)] flex flex-col items-center gap-3 sm:gap-4 w-full relative z-10"
               style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
             >
               {/* Penguin Mascot */}
               <img
                 src="/pengu-right.png"
                 alt="Mascot"
-                className="absolute top-4 -right-30 w-24 h-32 sm:w-32 sm:h-43 drop-shadow-lg z-10 select-none pointer-events-none"
-                style={{ filter: "drop-shadow(0 4px 0 #b4defc)" }}
+                className="absolute right-6 sm:right-4 -top-[84.5px] sm:-top-[114px] w-32 h-24 sm:w-[168px] sm:h-32 drop-shadow-lg z-10 select-none pointer-events-none [filter:drop-shadow(0_2px_0_#b4defc)] sm:[filter:drop-shadow(0_4px_0_#b4defc)]"
               />
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-4xl">🔎</span>
+                <span className="text-2xl sm:text-4xl">🔎</span>
                 <span
-                  className="text-2xl font-extrabold text-[#71afd4] drop-shadow-[2px_2px_0_#b4defc] tracking-tight"
+                  className="text-lg sm:text-2xl font-extrabold text-[#71afd4] drop-shadow-[2px_2px_0_#b4defc] tracking-tight"
                   style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
                 >
                   Verify Image Link
@@ -58,7 +74,7 @@ export default function VerifyPage() {
                 placeholder="Paste image URL (e.g. arweave.net/...)"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="w-full px-5 py-3 rounded-full border-4 border-[#b4defc] bg-[#fefdf9] text-base text-[#71afd4] font-bold shadow-[2px_2px_0_#b4defc] focus:outline-none focus:ring-2 focus:ring-[#b4defc] placeholder:text-[#b4defc]"
+                className="w-full px-3 sm:px-5 py-2 sm:py-3 rounded-full border-2 sm:border-4 border-[#b4defc] bg-[#fefdf9] text-sm sm:text-base text-[#71afd4] font-bold shadow-[2px_2px_0_#b4defc] focus:outline-none focus:ring-2 focus:ring-[#b4defc] placeholder:text-[#b4defc]"
                 style={{
                   fontFamily: "Comic Sans MS, cursive, sans-serif",
                   letterSpacing: "0.01em",
@@ -66,7 +82,7 @@ export default function VerifyPage() {
               />
               <button
                 type="submit"
-                className="px-8 py-2 rounded-full bg-[#ffe066] text-[#ffb347] font-extrabold border-4 border-[#ffb347] shadow-[2px_2px_0_#ffb347] hover:bg-[#ffb347] hover:text-white hover:scale-105 transition-all duration-150 text-lg mt-2"
+                className="px-5 sm:px-8 py-1.5 sm:py-2 rounded-full bg-[#ffe066] text-[#ffb347] font-extrabold border-2 sm:border-4 border-[#ffb347] shadow-[2px_2px_0_#ffb347] hover:bg-[#ffb347] hover:text-white hover:scale-105 transition-all duration-150 text-base sm:text-lg mt-2"
                 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
               >
                 Verify
