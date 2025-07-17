@@ -44,7 +44,7 @@ const arkivers = [
   },
 ];
 
-const TABS = ["All", "Latest", "Oldest"];
+const TABS = ["Latest", "Oldest", "Popular"];
 
 // Responsive column count hook (copied from main page)
 function useColumnCount() {
