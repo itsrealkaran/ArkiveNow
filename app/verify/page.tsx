@@ -123,7 +123,7 @@ export default function VerifyPage() {
                 ❌ Not Arkived by ArkiveNow
               </div>
               <div className="bg-[#fffbe9]/90 border-4 border-[#ffe066] rounded-2xl px-8 py-8 shadow-[4px_8px_0_#ffe066] text-center text-[#b4defc] font-bold mt-4">
-                This image link was not found in ArkiveNow's archive.
+                This image link was not found in ArkiveNow&apos;s archive.
               </div>
             </div>
           )}
