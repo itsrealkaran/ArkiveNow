@@ -1,52 +1,18 @@
 "use client";
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Header from "@/component/explore/header";
-import { showcaseData } from "@/app/showcaseData";
 import { ShowcaseCard } from "@/component/explore/tweet";
-
-// Sample Arkivers data
-const arkivers = [
-  {
-    id: 1,
-    avatar: "/pengu-peep.png",
-    displayName: "Pengu Peep",
-    username: "pengu",
-    archived: 128,
-  },
-  {
-    id: 2,
-    avatar: "/tweet-1.png",
-    displayName: "Jane Doe",
-    username: "janedoe",
-    archived: 92,
-  },
-  {
-    id: 3,
-    avatar: "/tweet-2.jpg",
-    displayName: "Alex Photo",
-    username: "alexphoto",
-    archived: 75,
-  },
-  {
-    id: 4,
-    avatar: "/tweet-4.jpg",
-    displayName: "Studio Cat",
-    username: "studio_cat",
-    archived: 60,
-  },
-  {
-    id: 5,
-    avatar: "/tweet-6.png",
-    displayName: "Test User",
-    username: "testuser",
-    archived: 44,
-  },
-];
+import { fetchUser, fetchUserTweets } from "@/lib/api";
 
 const TABS = ["Latest", "Oldest", "Popular"];
+const FILTER_TO_SORT: Record<string, string> = {
+  Latest: "latest",
+  Oldest: "oldest",
+  Popular: "popular",
+};
 
-// Responsive column count hook (copied from main page)
 function useColumnCount() {
   const [width, setWidth] = React.useState(1200);
   React.useEffect(() => {
@@ -57,10 +23,10 @@ function useColumnCount() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  if (width < 640) return 1; // mobile
-  if (width < 1024) return 2; // tablet
-  if (width < 1280) return 3; // laptop
-  return 4; // desktop
+  if (width < 640) return 1;
+  if (width < 1024) return 2;
+  if (width < 1280) return 3;
+  return 4;
 }
 
 export default function UserProfilePage() {
@@ -69,19 +35,61 @@ export default function UserProfilePage() {
   const username = Array.isArray(params.username)
     ? params.username[0]
     : params.username;
-  const user = arkivers.find((a) => a.username.replace(/^@/, "") === username);
-  const [selectedTab, setSelectedTab] = React.useState("All");
-
-  // For demo, show first 4 cards from showcaseData
-  const filteredTweets = showcaseData.slice(0, 4);
+  const safeUsername = username || "";
+  const [user, setUser] = useState<any>(null);
+  const [tweets, setTweets] = useState<any[]>([]);
+  const [selectedTab, setSelectedTab] = useState("Latest");
+  const [userLoading, setUserLoading] = useState(false);
+  const [tweetsLoading, setTweetsLoading] = useState(false);
+  const [userError, setUserError] = useState<string | null>(null);
+  const [tweetsError, setTweetsError] = useState<string | null>(null);
   const columnCount = useColumnCount();
-  // Split into columns (same as main page)
-  type ShowcaseItem = (typeof filteredTweets)[number];
-  const columns: ShowcaseItem[][] = Array.from(
-    { length: columnCount },
-    () => []
-  );
-  filteredTweets.forEach((item, i) => {
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadUser() {
+      setUserLoading(true);
+      setUserError(null);
+      try {
+        const data = await fetchUser(safeUsername);
+        if (!ignore) setUser(data && data.userId ? data : null);
+      } catch (e: any) {
+        if (!ignore) setUserError(e.message || "Failed to load user");
+      } finally {
+        if (!ignore) setUserLoading(false);
+      }
+    }
+    if (safeUsername) loadUser();
+    return () => {
+      ignore = true;
+    };
+  }, [safeUsername]);
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadTweets() {
+      setTweetsLoading(true);
+      setTweetsError(null);
+      try {
+        const data = await fetchUserTweets(safeUsername, {
+          sort: FILTER_TO_SORT[selectedTab],
+        });
+        if (!ignore) setTweets(data.data || []);
+      } catch (e: any) {
+        if (!ignore) setTweetsError(e.message || "Failed to load tweets");
+      } finally {
+        if (!ignore) setTweetsLoading(false);
+      }
+    }
+    if (safeUsername) loadTweets();
+    return () => {
+      ignore = true;
+    };
+  }, [safeUsername, selectedTab]);
+
+  // Split into columns
+  const columns: any[][] = Array.from({ length: columnCount }, () => []);
+  tweets.forEach((item: any, i: number) => {
     columns[i % columnCount].push(item);
   });
 
@@ -118,37 +126,51 @@ export default function UserProfilePage() {
               {/* Profile Header with superimposed Tabs */}
               <div className="relative">
                 <div className="flex flex-row items-center justify-between bg-[#fefdf9] border-2 border-[#b4defc] rounded-2xl rounded-bl-none shadow-[2px_4px_0_#b4defc,0_2px_16px_rgba(180,222,252,0.10)] px-3 sm:px-6 py-4 sm:py-6 relative z-0">
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <img
-                      src={user.avatar}
-                      alt={user.displayName}
-                      className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-[#b4defc] shadow-md object-cover bg-white"
-                    />
-                    <div className="flex flex-col items-start">
-                      <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
-                        <span
-                          className="text-xl sm:text-3xl font-extrabold text-[#171717]"
-                          style={{
-                            fontFamily: "Comic Sans MS, cursive, sans-serif",
-                          }}
-                        >
-                          {user.displayName}
+                  {userLoading ? (
+                    <div className="flex items-center gap-2 sm:gap-4 animate-pulse">
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-[#b4defc] bg-[#eaf6fb] shadow-md" />
+                      <div className="flex flex-col items-start gap-2 w-40 sm:w-64">
+                        <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
+                          <div className="h-7 sm:h-10 w-24 sm:w-40 bg-[#eaf6fb] rounded-md" />
+                          <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#eaf6fb] border-2 border-[#b4defc] w-14 sm:w-20 h-5 sm:h-7" />
+                        </div>
+                        <div className="h-4 sm:h-5 w-20 sm:w-32 bg-[#eaf6fb] rounded" />
+                        <div className="h-4 w-32 sm:w-40 bg-[#eaf6fb] rounded mt-1" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 sm:gap-4">
+                      <img
+                        src={user.profileImageUrl}
+                        alt={user.name}
+                        className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-[#b4defc] shadow-md object-cover bg-white"
+                      />
+                      <div className="flex flex-col items-start">
+                        <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
+                          <span
+                            className="text-xl sm:text-3xl font-extrabold text-[#171717]"
+                            style={{
+                              fontFamily: "Comic Sans MS, cursive, sans-serif",
+                            }}
+                          >
+                            {user.name}
+                          </span>
+                          <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#eaf6fb] border-2 border-[#b4defc] text-[#71afd4] font-bold text-xs ml-1">
+                            Arkiver
+                          </span>
+                        </div>
+                        <span className="text-xs sm:text-base text-[#71afd4] font-mono">
+                          @{user.username}
                         </span>
-                        <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#eaf6fb] border-2 border-[#b4defc] text-[#71afd4] font-bold text-xs ml-1">
-                          Arkiver
+                        <span className="text-xs text-[#b4defd] mt-0.5 sm:mt-1">
+                          Tweets Archived:{" "}
+                          <span className="font-black text-[#ffb347]">
+                            {user.count}
+                          </span>
                         </span>
                       </div>
-                      <span className="text-xs sm:text-base text-[#71afd4] font-mono">
-                        @{user.username}
-                      </span>
-                      <span className="text-xs text-[#b4defd] mt-0.5 sm:mt-1">
-                        Tweets Archived:{" "}
-                        <span className="font-black text-[#ffb347]">
-                          {user.archived}
-                        </span>
-                      </span>
                     </div>
-                  </div>
+                  )}
                   <img
                     src="/profile-peep.png"
                     alt="Penguin Mascot"
@@ -192,22 +214,16 @@ export default function UserProfilePage() {
                     key={colIdx}
                     className="flex flex-col gap-6 flex-1 min-w-0"
                   >
-                    {col.length > 0 ? (
-                      col.map((item) => (
-                        <ShowcaseCard
-                          key={item.id}
-                          tweet={item.tweet}
-                          transactionId={item.transactionId}
-                          timestamp={item.timestamp}
-                          image={item.image}
-                          username={item.username}
-                        />
-                      ))
-                    ) : (
-                      <div className="text-center text-[#b4defc] py-10">
-                        No tweets found.
-                      </div>
-                    )}
+                    {col.map((item) => (
+                      <ShowcaseCard
+                        key={item.id}
+                        tweet={item.tweet}
+                        transactionId={item.transactionId}
+                        timestamp={item.time}
+                        image={item.imageUrl}
+                        username={item.username}
+                      />
+                    ))}
                   </div>
                 ))}
               </div>
