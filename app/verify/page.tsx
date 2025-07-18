@@ -12,6 +12,7 @@ export default function VerifyPage() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,17 +21,15 @@ export default function VerifyPage() {
     setResult(null);
     try {
       const data = await verifyImageUrl(input.trim());
+      setShowModal(true);
       if (data.exists) {
         setResult({
           tweet: {
             id: data.tweetId,
             text: data.tweetContent || "",
-            user: {
-              id: data.author?.userId,
-              displayName: data.author?.username,
-            },
             public_metrics: data.publicMetrics || {},
           },
+          username: data.username || "",
           transactionId: data.transactionId,
           timestamp: data.archivedAt,
           image: data.imageUrl,
@@ -43,6 +42,12 @@ export default function VerifyPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function closeModal() {
+    setShowModal(false);
+    setResult(null);
+    setError(null);
   }
 
   return (
@@ -117,43 +122,58 @@ export default function VerifyPage() {
               </button>
             </form>
           </div>
-          {/* Result Section */}
-          {error && <div className="mt-6 text-red-500 font-bold">{error}</div>}
-          {result !== null && result !== false && (
-            <div className="mt-10 flex flex-col items-center w-full max-w-lg relative">
-              {/* Floating Badge */}
-              <div
-                className="absolute -top-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-lg font-black rounded-full shadow-lg border-4 border-white z-20 select-none"
-                style={{
-                  fontFamily: "Comic Sans MS, cursive, sans-serif",
-                  transform: "rotate(-6deg) scale(1.1)",
-                }}
-              >
-                ✅ Image is Arkived!
-              </div>
-              <ShowcaseCard
-                tweet={result.tweet}
-                transactionId={result.transactionId}
-                timestamp={result.timestamp}
-                image={result.image}
-                username={result.tweet.user.displayName}
-              />
-            </div>
-          )}
-          {result === false && (
-            <div className="mt-10 flex flex-col items-center w-full max-w-lg relative">
-              {/* Speech Bubble Error */}
-              <div
-                className="absolute -top-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-[#b4defc] to-[#71afd4] text-white text-lg font-black rounded-full shadow-lg border-4 border-white z-20 select-none"
-                style={{
-                  fontFamily: "Comic Sans MS, cursive, sans-serif",
-                  transform: "rotate(-6deg) scale(1.1)",
-                }}
-              >
-                ❌ Not Arkived by ArkiveNow
-              </div>
-              <div className="bg-[#fffbe9]/90 border-4 border-[#ffe066] rounded-2xl px-8 py-8 shadow-[4px_8px_0_#ffe066] text-center text-[#b4defc] font-bold mt-4">
-                This image link was not found in ArkiveNow&apos;s archive.
+          {/* Result Modal */}
+          {showModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full mx-2 animate-fadeIn">
+                <button
+                  className="absolute top-2 right-2 text-[#b4defc] hover:text-[#71afd4] text-2xl font-bold rounded-full px-2 py-1 focus:outline-none"
+                  onClick={closeModal}
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+                {error && (
+                  <div className="mb-4 text-red-500 font-bold">{error}</div>
+                )}
+                {result !== null && result !== false && (
+                  <div className="flex flex-col items-center w-full relative">
+                    {/* Floating Badge */}
+                    <div
+                      className="absolute -top-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-lg font-black rounded-full shadow-lg border-4 border-white z-20 select-none"
+                      style={{
+                        fontFamily: "Comic Sans MS, cursive, sans-serif",
+                        transform: "rotate(-6deg) scale(1.1)",
+                      }}
+                    >
+                      ✅ Image is Arkived!
+                    </div>
+                    <ShowcaseCard
+                      tweet={result.tweet}
+                      transactionId={result.transactionId}
+                      timestamp={result.timestamp}
+                      image={result.image}
+                      username={result.username}
+                    />
+                  </div>
+                )}
+                {result === false && (
+                  <div className="flex flex-col items-center w-full relative">
+                    {/* Speech Bubble Error */}
+                    <div
+                      className="absolute -top-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-[#b4defc] to-[#71afd4] text-white text-lg font-black rounded-full shadow-lg border-4 border-white z-20 select-none"
+                      style={{
+                        fontFamily: "Comic Sans MS, cursive, sans-serif",
+                        transform: "rotate(-6deg) scale(1.1)",
+                      }}
+                    >
+                      ❌ Not Arkived by ArkiveNow
+                    </div>
+                    <div className="bg-[#fffbe9]/90 border-4 border-[#ffe066] rounded-2xl px-8 py-8 shadow-[4px_8px_0_#ffe066] text-center text-[#b4defc] font-bold mt-4">
+                      This image link was not found in ArkiveNow&apos;s archive.
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

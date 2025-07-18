@@ -15,10 +15,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ exists: false });
   }
 
+  // Fetch the tweet and author info
   const sql = `
     SELECT t.tweet_id, t.screenshot_arweave_id, t.screenshot_created_at, t.author_id, u.username, u.name, u.profile_image_url
     FROM tweets t
-    LEFT JOIN users u ON t.author_id = u.author_id
+    JOIN users u ON t.author_id = u.author_id
     WHERE t.screenshot_arweave_id = $1
     LIMIT 1
   `;
@@ -35,11 +36,6 @@ export async function GET(req: NextRequest) {
     transactionId: row.screenshot_arweave_id,
     imageUrl: `https://arweave.net/${row.screenshot_arweave_id}`,
     archivedAt: row.screenshot_created_at,
-    author: {
-      userId: row.author_id,
-      username: row.username,
-      name: row.name,
-      profileImageUrl: row.profile_image_url,
-    },
+    username: row.username,
   });
 } 
