@@ -33,9 +33,20 @@ const FILTER_TO_SORT: Record<string, string> = {
   Popular: "popular",
 };
 
+// Define the Tweet type based on expected data structure
+interface Tweet {
+  tweetId: string;
+  tweetContent: string;
+  username: string;
+  transactionId: string;
+  time: string | Date;
+  imageUrl: string | null;
+  publicMetrics: Record<string, any>;
+}
+
 export default function Home() {
   const [selected, setSelected] = useState("Latest");
-  const [tweets, setTweets] = useState<any[]>([]);
+  const [tweets, setTweets] = useState<Tweet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -56,8 +67,9 @@ export default function Home() {
           data = await fetchTweets({ sort: FILTER_TO_SORT[selected] });
         }
         if (!ignore) setTweets(data.data || []);
-      } catch (e: any) {
-        if (!ignore) setError(e.message || "Failed to load tweets");
+      } catch (e) {
+        if (!ignore)
+          setError(e instanceof Error ? e.message : "Failed to load tweets");
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -69,8 +81,8 @@ export default function Home() {
   }, [selected, searchActive, search]);
 
   // Split into columns
-  const columns: any[][] = Array.from({ length: columnCount }, () => []);
-  tweets.forEach((item: any, i: number) => {
+  const columns: Tweet[][] = Array.from({ length: columnCount }, () => []);
+  tweets.forEach((item: Tweet, i: number) => {
     columns[i % columnCount].push(item);
   });
 
@@ -196,8 +208,12 @@ export default function Home() {
                         public_metrics: item.publicMetrics,
                       }}
                       transactionId={item.transactionId}
-                      timestamp={item.time}
-                      image={item.imageUrl}
+                      timestamp={
+                        typeof item.time === "string"
+                          ? item.time
+                          : item.time.toISOString()
+                      }
+                      image={item.imageUrl || ""}
                       username={item.username}
                     />
                   ))}
