@@ -3,8 +3,18 @@ import { query } from '@/lib/db';
 
 const PAGE_LIMIT = 20;
 
-function buildCursor(row: any) {
-  return Buffer.from(`${row.screenshot_created_at?.toISOString() || row.created_at.toISOString()}|${row.tweet_id}`).toString('base64');
+interface TweetRow {
+  tweet_id: string;
+  screenshot_arweave_id: string | null;
+  screenshot_created_at: Date | null;
+  created_at: Date;
+  text: string;
+  public_metrics: Record<string, any>;
+  username: string;
+}
+
+function buildCursor(row: TweetRow) {
+  return Buffer.from(`${(row.screenshot_created_at ?? row.created_at).toISOString()}|${row.tweet_id}`).toString('base64');
 }
 
 function parseCursor(cursor: string) {
@@ -20,16 +30,13 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(PAGE_LIMIT, parseInt(searchParams.get('limit') || '20', 10));
   const cursor = searchParams.get('cursor');
 
-  let where = "t.screenshot_arweave_id IS NOT NULL";
+  const where = "t.screenshot_arweave_id IS NOT NULL";
   let cursorClause = '';
-  let params: any[] = [];
+  const params: (string | number)[] = [];
 
   if (q) {
-    where += ` AND (
-      t.text ILIKE $${params.length + 1} OR
-      u.username ILIKE $${params.length + 1} OR
-      u.name ILIKE $${params.length + 1}
-    )`;
+    params.push(`%${q}%`);
+    params.push(`%${q}%`);
     params.push(`%${q}%`);
   }
 
@@ -37,7 +44,7 @@ export async function GET(req: NextRequest) {
     const c = parseCursor(cursor);
     if (c) {
       cursorClause = `AND (t.screenshot_created_at < $${params.length + 1} OR (t.screenshot_created_at = $${params.length + 1} AND t.tweet_id < $${params.length + 2}))`;
-      params.push(c.createdAt, c.tweetId);
+      params.push(c.createdAt ?? '', c.tweetId ?? '');
     }
   }
 
@@ -54,7 +61,7 @@ export async function GET(req: NextRequest) {
   const result = await query(sql, params);
   const rows = result.rows;
 
-  const data = rows.slice(0, limit).map((row: any) => ({
+  const data = rows.slice(0, limit).map((row: TweetRow) => ({
     imageUrl: row.screenshot_arweave_id ? `https://arweave.net/${row.screenshot_arweave_id}` : null,
     transactionId: row.screenshot_arweave_id,
     username: row.username,
