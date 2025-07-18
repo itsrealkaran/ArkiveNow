@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
   const sort = searchParams.get('sort') || 'latest';
   const limit = Math.min(PAGE_LIMIT, parseInt(searchParams.get('limit') || '20', 10));
   const cursor = searchParams.get('cursor');
-  const username = params.username;
+  const { username } = await params;
 
   let orderBy = 't.screenshot_created_at DESC, t.tweet_id DESC';
   let where = "t.screenshot_arweave_id IS NOT NULL AND u.username = $1";

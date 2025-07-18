@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
 export async function GET(req: NextRequest, { params }: { params: { username: string } }) {
-  const username = params.username;
+  const { username } = await params;
   const sql = `
     SELECT author_id, name, username, profile_image_url, verified, created_at
     FROM users
