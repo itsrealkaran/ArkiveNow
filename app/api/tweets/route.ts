@@ -3,13 +3,23 @@ import { query } from '@/lib/db';
 
 const PAGE_LIMIT = 20;
 
-function buildCursor(row: any, sort: string) {
+interface TweetRow {
+  tweet_id: string;
+  screenshot_arweave_id: string | null;
+  screenshot_created_at: Date | null;
+  created_at: Date;
+  text: string;
+  public_metrics: Record<string, any>;
+  username: string;
+}
+
+function buildCursor(row: TweetRow, sort: string) {
   if (sort === 'popular') {
     // Use like_count and tweet_id as cursor
     return Buffer.from(`${row.public_metrics?.like_count || 0}|${row.tweet_id}`).toString('base64');
   } else {
     // Use created_at and tweet_id as cursor
-    return Buffer.from(`${row.screenshot_created_at?.toISOString() || row.created_at.toISOString()}|${row.tweet_id}`).toString('base64');
+    return Buffer.from(`${(row.screenshot_created_at ?? row.created_at).toISOString()}|${row.tweet_id}`).toString('base64');
   }
 }
 
@@ -32,9 +42,9 @@ export async function GET(req: NextRequest) {
   const cursor = searchParams.get('cursor');
 
   let orderBy = 't.screenshot_created_at DESC, t.tweet_id DESC';
-  let where = "t.screenshot_arweave_id IS NOT NULL";
+  const where = "t.screenshot_arweave_id IS NOT NULL";
   let cursorClause = '';
-  let params: any[] = [];
+  const params: (string | number)[] = [];
 
   if (sort === 'oldest') {
     orderBy = 't.screenshot_created_at ASC, t.tweet_id ASC';
@@ -48,13 +58,13 @@ export async function GET(req: NextRequest) {
     if (c) {
       if (sort === 'popular') {
         cursorClause = `AND ((t.public_metrics->>'like_count')::int < $1 OR ((t.public_metrics->>'like_count')::int = $1 AND t.tweet_id < $2))`;
-        params.push(c.likeCount, c.tweetId);
+        params.push(c.likeCount ?? 0, c.tweetId ?? '');
       } else if (sort === 'oldest') {
         cursorClause = `AND (t.screenshot_created_at > $1 OR (t.screenshot_created_at = $1 AND t.tweet_id > $2))`;
-        params.push(c.createdAt, c.tweetId);
+        params.push(c.createdAt ?? '', c.tweetId ?? '');
       } else {
         cursorClause = `AND (t.screenshot_created_at < $1 OR (t.screenshot_created_at = $1 AND t.tweet_id < $2))`;
-        params.push(c.createdAt, c.tweetId);
+        params.push(c.createdAt ?? '', c.tweetId ?? '');
       }
     }
   }
@@ -72,7 +82,7 @@ export async function GET(req: NextRequest) {
   const result = await query(sql, params);
   const rows = result.rows;
 
-  const data = rows.slice(0, limit).map((row: any) => ({
+  const data = rows.slice(0, limit).map((row: TweetRow) => ({
     imageUrl: row.screenshot_arweave_id ? `https://arweave.net/${row.screenshot_arweave_id}` : null,
     transactionId: row.screenshot_arweave_id,
     username: row.username,
