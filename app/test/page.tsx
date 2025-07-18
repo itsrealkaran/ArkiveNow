@@ -12,16 +12,16 @@ const endpoints = [
   },
   {
     label:
-      "/api/tweets/verifyimageurl?url=https://arweave.net/-Rsz0nRpEpNy9z9IVe6TN80-_-mjKdB21AwmqsfEDI8",
-    url: "/api/tweets/verifyimageurl?url=https://arweave.net/-Rsz0nRpEpNy9z9IVe6TN80-_-mjKdB21AwmqsfEDI8",
+      "/api/tweets/verifyimageurl?url=https://arweave.net/UayE03Rcr8K7byGUOXLCkt8_Yo0QBUlbBZiOvLyxvTs",
+    url: "/api/tweets/verifyimageurl?url=https://arweave.net/UayE03Rcr8K7byGUOXLCkt8_Yo0QBUlbBZiOvLyxvTs",
   },
   { label: "/api/arkivers", url: "/api/arkivers" },
   { label: "/api/users/testuser", url: "/api/users/testuser" },
-  { label: "/api/users/itsrealkaran", url: "/api/users/itsrealkaran" },
+  { label: "/api/users/apectoryinc", url: "/api/users/apectoryinc" },
   { label: "/api/users/testuser/tweets", url: "/api/users/testuser/tweets" },
   {
-    label: "/api/users/itsrealkaran/tweets",
-    url: "/api/users/itsrealkaran/tweets",
+    label: "/api/users/apectoryinc/tweets",
+    url: "/api/users/apectoryinc/tweets",
   },
 ];
 
