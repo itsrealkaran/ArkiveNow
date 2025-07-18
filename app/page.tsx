@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
-import { showcaseData } from "./showcaseData";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import Header from "@/component/explore/header";
 import { useRouter } from "next/navigation";
+import { fetchTweets } from "@/lib/api";
 
 const FILTERS = ["Latest", "Oldest", "Popular"];
 
@@ -27,29 +27,43 @@ function useColumnCount() {
   return 4; // desktop
 }
 
+const FILTER_TO_SORT: Record<string, string> = {
+  Latest: "latest",
+  Oldest: "oldest",
+  Popular: "popular",
+};
+
 export default function Home() {
   const [selected, setSelected] = useState("Latest");
-  const searchQuery: string = "";
+  const [tweets, setTweets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const columnCount = useColumnCount();
   const router = useRouter();
-  // Filtered data
-  const filteredData = showcaseData.filter(
-    (item: (typeof showcaseData)[number]) =>
-      typeof searchQuery === "string" &&
-      (searchQuery === "" ||
-        item.tweet.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.tweet.user?.displayName
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()))
-  );
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadTweets() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchTweets({ sort: FILTER_TO_SORT[selected] });
+        if (!ignore) setTweets(data.data || []);
+      } catch (e: any) {
+        if (!ignore) setError(e.message || "Failed to load tweets");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    loadTweets();
+    return () => {
+      ignore = true;
+    };
+  }, [selected]);
 
   // Split into columns
-  type ShowcaseItem = (typeof showcaseData)[number];
-  const columns: ShowcaseItem[][] = Array.from(
-    { length: columnCount },
-    () => []
-  );
-  filteredData.forEach((item: (typeof showcaseData)[number], i: number) => {
+  const columns: any[][] = Array.from({ length: columnCount }, () => []);
+  tweets.forEach((item: any, i: number) => {
     columns[i % columnCount].push(item);
   });
 
@@ -87,6 +101,7 @@ export default function Home() {
               type="text"
               placeholder="Search"
               className="bg-transparent outline-none text-sm sm:text-base md:text-lg w-full placeholder:text-[#b4defc] text-[#71afd4]"
+              disabled
             />
           </div>
         </div>
@@ -127,23 +142,44 @@ export default function Home() {
             />
           </div>
           {/* Content Grid: Masonry/Bento Columns */}
-          <div className="px-6 py-6 w-full flex-1 flex gap-6 overflow-y-auto max-h-[calc(100vh-220px)] sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-260px)]">
-            {columns.map((col, colIdx) => (
-              <div key={colIdx} className="flex flex-col gap-6 flex-1 min-w-0">
-                {col.map((item) => (
-                  <ShowcaseCard
-                    key={item.id}
-                    tweet={item.tweet}
-                    transactionId={item.transactionId}
-                    timestamp={item.timestamp}
-                    image={item.image}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center w-full text-xl text-[#71afd4] font-bold">
+              Loading...
+            </div>
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center w-full text-red-500 font-bold">
+              {error}
+            </div>
+          ) : (
+            <div className="px-6 py-6 w-full flex-1 flex gap-6 overflow-y-auto max-h-[calc(100vh-220px)] sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-260px)]">
+              {columns.map((col, colIdx) => (
+                <div
+                  key={colIdx}
+                  className="flex flex-col gap-6 flex-1 min-w-0"
+                >
+                  {col.map((item, i) => (
+                    <ShowcaseCard
+                      key={item.tweetId || i}
+                      tweet={{
+                        id: item.tweetId,
+                        text: item.tweetContent,
+                        user: {
+                          id: item.username || String(i),
+                          displayName: item.username,
+                        },
+                        public_metrics: item.publicMetrics,
+                      }}
+                      transactionId={item.transactionId}
+                      timestamp={item.time}
+                      image={item.imageUrl}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
           {/* Empty State */}
-          {filteredData.length === 0 && (
+          {!loading && !error && tweets.length === 0 && (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-semibold text-gray-600 mb-2">
