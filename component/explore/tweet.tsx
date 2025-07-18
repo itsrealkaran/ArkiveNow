@@ -9,6 +9,7 @@ interface ShowcaseCardProps {
   transactionId: string;
   timestamp: string;
   image: string;
+  username: string;
 }
 
 export function ShowcaseCard({
@@ -16,6 +17,7 @@ export function ShowcaseCard({
   transactionId,
   timestamp,
   image,
+  username,
 }: ShowcaseCardProps) {
   const [showCopied, setShowCopied] = useState(false);
 
@@ -130,7 +132,7 @@ export function ShowcaseCard({
                 className="text-xs font-bold text-[#ffb347] bg-[#fffbe9] px-2 py-1 rounded-full border-2 border-[#ffe066] shadow-sm"
                 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
               >
-                ARCHIVED
+                @{username} ARCHIVED
               </span>
               <span
                 className="text-xs text-[#71afd4] font-semibold"

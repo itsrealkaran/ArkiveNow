@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import Header from "@/component/explore/header";
 import { useRouter } from "next/navigation";
-import { fetchTweets } from "@/lib/api";
+import { fetchTweets, searchTweets } from "@/lib/api";
 
 const FILTERS = ["Latest", "Oldest", "Popular"];
 
@@ -38,6 +38,8 @@ export default function Home() {
   const [tweets, setTweets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [searchActive, setSearchActive] = useState(false);
   const columnCount = useColumnCount();
   const router = useRouter();
 
@@ -47,7 +49,12 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchTweets({ sort: FILTER_TO_SORT[selected] });
+        let data;
+        if (searchActive && search.trim()) {
+          data = await searchTweets(search.trim());
+        } else {
+          data = await fetchTweets({ sort: FILTER_TO_SORT[selected] });
+        }
         if (!ignore) setTweets(data.data || []);
       } catch (e: any) {
         if (!ignore) setError(e.message || "Failed to load tweets");
@@ -59,13 +66,26 @@ export default function Home() {
     return () => {
       ignore = true;
     };
-  }, [selected]);
+  }, [selected, searchActive, search]);
 
   // Split into columns
   const columns: any[][] = Array.from({ length: columnCount }, () => []);
   tweets.forEach((item: any, i: number) => {
     columns[i % columnCount].push(item);
   });
+
+  function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+    if (e.target.value === "") {
+      setSearchActive(false);
+    }
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      setSearchActive(!!search.trim());
+    }
+  }
 
   return (
     <div
@@ -101,7 +121,9 @@ export default function Home() {
               type="text"
               placeholder="Search"
               className="bg-transparent outline-none text-sm sm:text-base md:text-lg w-full placeholder:text-[#b4defc] text-[#71afd4]"
-              disabled
+              value={search}
+              onChange={handleSearchInput}
+              onKeyDown={handleSearchKeyDown}
             />
           </div>
         </div>
@@ -109,7 +131,11 @@ export default function Home() {
           {FILTERS.map((filter) => (
             <button
               key={filter}
-              onClick={() => setSelected(filter)}
+              onClick={() => {
+                setSelected(filter);
+                setSearch("");
+                setSearchActive(false);
+              }}
               className={`transition-all font-semibold rounded-full px-4 sm:px-6 py-1.5 sm:py-2 shadow-md border-2 text-xs sm:text-sm md:text-base tracking-wide flex items-center justify-center
                 ${
                   selected === filter
@@ -172,6 +198,7 @@ export default function Home() {
                       transactionId={item.transactionId}
                       timestamp={item.time}
                       image={item.imageUrl}
+                      username={item.username}
                     />
                   ))}
                 </div>
