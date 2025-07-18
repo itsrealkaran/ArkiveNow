@@ -32,7 +32,7 @@ export function ShowcaseCard({
   };
 
   const handleOpenInNewTab = () => {
-    window.open(`/tweet/${tweet.id}`, "_blank");
+    window.open(`https://arweave.net/${transactionId}`, "_blank");
   };
 
   const formatTimeAgo = (timestamp: string) => {
