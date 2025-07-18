@@ -29,6 +29,28 @@ function useColumnCount() {
   return 4;
 }
 
+// Define types for user and tweet
+interface UserProfile {
+  userId: string;
+  name: string;
+  username: string;
+  profileImageUrl: string;
+  count: number;
+}
+
+interface Tweet {
+  id: string;
+  tweet: {
+    id: string;
+    text: string;
+    public_metrics: Record<string, any>;
+  };
+  transactionId: string;
+  time: string;
+  imageUrl: string;
+  username: string;
+}
+
 export default function UserProfilePage() {
   const router = useRouter();
   const params = useParams();
@@ -36,25 +58,20 @@ export default function UserProfilePage() {
     ? params.username[0]
     : params.username;
   const safeUsername = username || "";
-  const [user, setUser] = useState<any>(null);
-  const [tweets, setTweets] = useState<any[]>([]);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [tweets, setTweets] = useState<Tweet[]>([]);
   const [selectedTab, setSelectedTab] = useState("Latest");
   const [userLoading, setUserLoading] = useState(false);
-  const [tweetsLoading, setTweetsLoading] = useState(false);
-  const [userError, setUserError] = useState<string | null>(null);
-  const [tweetsError, setTweetsError] = useState<string | null>(null);
   const columnCount = useColumnCount();
 
   useEffect(() => {
     let ignore = false;
     async function loadUser() {
       setUserLoading(true);
-      setUserError(null);
       try {
         const data = await fetchUser(safeUsername);
         if (!ignore) setUser(data && data.userId ? data : null);
-      } catch (e: any) {
-        if (!ignore) setUserError(e.message || "Failed to load user");
+      } catch (e) {
       } finally {
         if (!ignore) setUserLoading(false);
       }
@@ -68,17 +85,13 @@ export default function UserProfilePage() {
   useEffect(() => {
     let ignore = false;
     async function loadTweets() {
-      setTweetsLoading(true);
-      setTweetsError(null);
       try {
         const data = await fetchUserTweets(safeUsername, {
           sort: FILTER_TO_SORT[selectedTab],
         });
         if (!ignore) setTweets(data.data || []);
-      } catch (e: any) {
-        if (!ignore) setTweetsError(e.message || "Failed to load tweets");
+      } catch (e) {
       } finally {
-        if (!ignore) setTweetsLoading(false);
       }
     }
     if (safeUsername) loadTweets();
@@ -88,8 +101,8 @@ export default function UserProfilePage() {
   }, [safeUsername, selectedTab]);
 
   // Split into columns
-  const columns: any[][] = Array.from({ length: columnCount }, () => []);
-  tweets.forEach((item: any, i: number) => {
+  const columns: Tweet[][] = Array.from({ length: columnCount }, () => []);
+  tweets.forEach((item: Tweet, i: number) => {
     columns[i % columnCount].push(item);
   });
 

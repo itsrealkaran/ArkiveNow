@@ -6,10 +6,23 @@ import { ShowcaseCard } from "@/component/explore/tweet";
 import { useRouter } from "next/navigation";
 import { verifyImageUrl } from "@/lib/api";
 
+// Define the VerifyResult type based on expected data structure
+interface VerifyResult {
+  tweet: {
+    id: string;
+    text: string;
+    public_metrics: Record<string, any>;
+  };
+  username: string;
+  transactionId: string;
+  timestamp: string;
+  image: string;
+}
+
 export default function VerifyPage() {
   const router = useRouter();
   const [input, setInput] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<VerifyResult | false | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -37,8 +50,8 @@ export default function VerifyPage() {
       } else {
         setResult(false);
       }
-    } catch (e: any) {
-      setError(e.message || "Failed to verify image");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to verify image");
     } finally {
       setLoading(false);
     }
