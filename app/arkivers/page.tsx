@@ -5,9 +5,18 @@ import { useRouter } from "next/navigation";
 import Header from "@/component/explore/header";
 import { fetchArkivers } from "@/lib/api";
 
+// Define the Arkiver type based on expected data structure
+interface Arkiver {
+  userId: string;
+  name: string;
+  username: string;
+  profileImageUrl: string;
+  archivedCount: number;
+}
+
 export default function ArkiversPage() {
   const router = useRouter();
-  const [arkivers, setArkivers] = useState<any[]>([]);
+  const [arkivers, setArkivers] = useState<Arkiver[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,8 +28,9 @@ export default function ArkiversPage() {
       try {
         const data = await fetchArkivers();
         if (!ignore) setArkivers(data.data || []);
-      } catch (e: any) {
-        if (!ignore) setError(e.message || "Failed to load arkivers");
+      } catch (e) {
+        if (!ignore)
+          setError(e instanceof Error ? e.message : "Failed to load arkivers");
       } finally {
         if (!ignore) setLoading(false);
       }
