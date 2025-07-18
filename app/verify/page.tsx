@@ -107,6 +107,7 @@ export default function VerifyPage() {
                 transactionId={result.transactionId}
                 timestamp={result.timestamp}
                 image={result.image}
+                username={result.username}
               />
             </div>
           )}

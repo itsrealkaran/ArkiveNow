@@ -200,6 +200,7 @@ export default function UserProfilePage() {
                           transactionId={item.transactionId}
                           timestamp={item.timestamp}
                           image={item.image}
+                          username={item.username}
                         />
                       ))
                     ) : (
