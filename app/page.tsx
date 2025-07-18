@@ -7,6 +7,7 @@ import { ShowcaseCard } from "@/component/explore/tweet";
 import Header from "@/component/explore/header";
 import { useRouter } from "next/navigation";
 import { fetchTweets, searchTweets } from "@/lib/api";
+import type { PublicMetrics } from "@/types/tweet";
 
 const FILTERS = ["Latest", "Oldest", "Popular"];
 
@@ -41,7 +42,7 @@ interface Tweet {
   transactionId: string;
   time: string | Date;
   imageUrl: string | null;
-  publicMetrics: Record<string, any>;
+  publicMetrics: PublicMetrics;
 }
 
 export default function Home() {

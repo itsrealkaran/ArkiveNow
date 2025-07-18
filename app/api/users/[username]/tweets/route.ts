@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import type { PublicMetrics } from '@/types/tweet';
 
 const PAGE_LIMIT = 20;
 
@@ -9,7 +10,7 @@ interface TweetRow {
   screenshot_created_at: Date | null;
   created_at: Date;
   text: string;
-  public_metrics: Record<string, any>;
+  public_metrics: PublicMetrics;
   username: string;
 }
 
@@ -21,7 +22,17 @@ function buildCursor(row: TweetRow, sort: string) {
   }
 }
 
-function parseCursor(cursor: string, sort: string) {
+// Define the type for the return value of parseCursor
+interface PopularCursor {
+  likeCount: number;
+  tweetId: string;
+}
+interface DateCursor {
+  createdAt: string;
+  tweetId: string;
+}
+
+function parseCursor(cursor: string, sort: string): PopularCursor | DateCursor | null {
   if (!cursor) return null;
   const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
   if (sort === 'popular') {
@@ -33,12 +44,19 @@ function parseCursor(cursor: string, sort: string) {
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { username: string } }) {
+function isPopularCursor(cursor: PopularCursor | DateCursor): cursor is PopularCursor {
+  return (cursor as PopularCursor).likeCount !== undefined;
+}
+function isDateCursor(cursor: PopularCursor | DateCursor): cursor is DateCursor {
+  return (cursor as DateCursor).createdAt !== undefined;
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ username: string }> }) {
   const { searchParams } = new URL(req.url);
   const sort = searchParams.get('sort') || 'latest';
   const limit = Math.min(PAGE_LIMIT, parseInt(searchParams.get('limit') || '20', 10));
   const cursor = searchParams.get('cursor');
-  const { username } = params;
+  const { username } = await params;
 
   let orderBy = 't.screenshot_created_at DESC, t.tweet_id DESC';
   const where = "t.screenshot_arweave_id IS NOT NULL AND u.username = $1";
@@ -54,13 +72,13 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
   if (cursor) {
     const c = parseCursor(cursor, sort);
     if (c) {
-      if (sort === 'popular') {
+      if (sort === 'popular' && isPopularCursor(c)) {
         cursorClause = `AND ((t.public_metrics->>'like_count')::int < $2 OR ((t.public_metrics->>'like_count')::int = $2 AND t.tweet_id < $3))`;
         paramsArr.push(c.likeCount ?? 0, c.tweetId ?? '');
-      } else if (sort === 'oldest') {
+      } else if (sort === 'oldest' && isDateCursor(c)) {
         cursorClause = `AND (t.screenshot_created_at > $2 OR (t.screenshot_created_at = $2 AND t.tweet_id > $3))`;
         paramsArr.push(c.createdAt ?? '', c.tweetId ?? '');
-      } else {
+      } else if (isDateCursor(c)) {
         cursorClause = `AND (t.screenshot_created_at < $2 OR (t.screenshot_created_at = $2 AND t.tweet_id < $3))`;
         paramsArr.push(c.createdAt ?? '', c.tweetId ?? '');
       }

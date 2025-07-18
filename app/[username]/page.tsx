@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Header from "@/component/explore/header";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import { fetchUser, fetchUserTweets } from "@/lib/api";
+import type { PublicMetrics } from "@/types/tweet";
 
 const TABS = ["Latest", "Oldest", "Popular"];
 const FILTER_TO_SORT: Record<string, string> = {
@@ -43,7 +44,7 @@ interface Tweet {
   tweet: {
     id: string;
     text: string;
-    public_metrics: Record<string, any>;
+    public_metrics: PublicMetrics;
   };
   transactionId: string;
   time: string;
@@ -53,10 +54,10 @@ interface Tweet {
 
 export default function UserProfilePage() {
   const router = useRouter();
-  const params = useParams();
-  const username = Array.isArray(params.username)
-    ? params.username[0]
-    : params.username;
+  const routeParams = useParams<{ username: string | string[] }>();
+  const username = Array.isArray(routeParams.username)
+    ? routeParams.username[0]
+    : routeParams.username;
   const safeUsername = username || "";
   const [user, setUser] = useState<UserProfile | null>(null);
   const [tweets, setTweets] = useState<Tweet[]>([]);
@@ -71,7 +72,8 @@ export default function UserProfilePage() {
       try {
         const data = await fetchUser(safeUsername);
         if (!ignore) setUser(data && data.userId ? data : null);
-      } catch (e) {
+      } catch {
+        // ignore
       } finally {
         if (!ignore) setUserLoading(false);
       }
@@ -90,7 +92,8 @@ export default function UserProfilePage() {
           sort: FILTER_TO_SORT[selectedTab],
         });
         if (!ignore) setTweets(data.data || []);
-      } catch (e) {
+      } catch {
+        // ignore
       } finally {
       }
     }

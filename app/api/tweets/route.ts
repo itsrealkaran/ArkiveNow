@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import type { PublicMetrics } from '@/types/tweet';
 
 const PAGE_LIMIT = 20;
 
@@ -9,7 +10,7 @@ interface TweetRow {
   screenshot_created_at: Date | null;
   created_at: Date;
   text: string;
-  public_metrics: Record<string, any>;
+  public_metrics: PublicMetrics;
   username: string;
 }
 
@@ -23,7 +24,17 @@ function buildCursor(row: TweetRow, sort: string) {
   }
 }
 
-function parseCursor(cursor: string, sort: string) {
+// Define the type for the return value of parseCursor
+interface PopularCursor {
+  likeCount: number;
+  tweetId: string;
+}
+interface DateCursor {
+  createdAt: string;
+  tweetId: string;
+}
+
+function parseCursor(cursor: string, sort: string): PopularCursor | DateCursor | null {
   if (!cursor) return null;
   const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
   if (sort === 'popular') {
@@ -33,6 +44,13 @@ function parseCursor(cursor: string, sort: string) {
     const [createdAt, tweetId] = decoded.split('|');
     return { createdAt, tweetId };
   }
+}
+
+function isPopularCursor(cursor: PopularCursor | DateCursor): cursor is PopularCursor {
+  return (cursor as PopularCursor).likeCount !== undefined;
+}
+function isDateCursor(cursor: PopularCursor | DateCursor): cursor is DateCursor {
+  return (cursor as DateCursor).createdAt !== undefined;
 }
 
 export async function GET(req: NextRequest) {
@@ -56,13 +74,13 @@ export async function GET(req: NextRequest) {
   if (cursor) {
     const c = parseCursor(cursor, sort);
     if (c) {
-      if (sort === 'popular') {
+      if (sort === 'popular' && isPopularCursor(c)) {
         cursorClause = `AND ((t.public_metrics->>'like_count')::int < $1 OR ((t.public_metrics->>'like_count')::int = $1 AND t.tweet_id < $2))`;
         params.push(c.likeCount ?? 0, c.tweetId ?? '');
-      } else if (sort === 'oldest') {
+      } else if (sort === 'oldest' && isDateCursor(c)) {
         cursorClause = `AND (t.screenshot_created_at > $1 OR (t.screenshot_created_at = $1 AND t.tweet_id > $2))`;
         params.push(c.createdAt ?? '', c.tweetId ?? '');
-      } else {
+      } else if (isDateCursor(c)) {
         cursorClause = `AND (t.screenshot_created_at < $1 OR (t.screenshot_created_at = $1 AND t.tweet_id < $2))`;
         params.push(c.createdAt ?? '', c.tweetId ?? '');
       }

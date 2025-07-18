@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function GET(req: NextRequest, { params }: { params: { username: string } }) {
-  const { username } = params;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
   const sql = `
     SELECT u.author_id, u.name, u.username, u.profile_image_url, u.verified, u.created_at,
       (SELECT COUNT(*) FROM tweets t WHERE t.author_id = u.author_id AND t.screenshot_arweave_id IS NOT NULL) as count

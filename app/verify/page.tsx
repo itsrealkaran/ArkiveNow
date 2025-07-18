@@ -5,13 +5,14 @@ import Header from "@/component/explore/header";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import { useRouter } from "next/navigation";
 import { verifyImageUrl } from "@/lib/api";
+import type { PublicMetrics } from "@/types/tweet";
 
 // Define the VerifyResult type based on expected data structure
 interface VerifyResult {
   tweet: {
     id: string;
     text: string;
-    public_metrics: Record<string, any>;
+    public_metrics: PublicMetrics;
   };
   username: string;
   transactionId: string;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import type { PublicMetrics } from '@/types/tweet';
 
 const PAGE_LIMIT = 20;
 
@@ -9,7 +10,7 @@ interface TweetRow {
   screenshot_created_at: Date | null;
   created_at: Date;
   text: string;
-  public_metrics: Record<string, any>;
+  public_metrics: PublicMetrics;
   username: string;
 }
 
@@ -17,7 +18,13 @@ function buildCursor(row: TweetRow) {
   return Buffer.from(`${(row.screenshot_created_at ?? row.created_at).toISOString()}|${row.tweet_id}`).toString('base64');
 }
 
-function parseCursor(cursor: string) {
+// Define the type for the return value of parseCursor
+interface DateCursor {
+  createdAt: string;
+  tweetId: string;
+}
+
+function parseCursor(cursor: string): DateCursor | null {
   if (!cursor) return null;
   const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
   const [createdAt, tweetId] = decoded.split('|');
