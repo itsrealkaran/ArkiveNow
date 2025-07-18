@@ -1,22 +1,48 @@
 "use client";
 
 import React, { useState } from "react";
-import { showcaseData } from "../showcaseData";
 import Header from "@/component/explore/header";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import { useRouter } from "next/navigation";
+import { verifyImageUrl } from "@/lib/api";
 
 export default function VerifyPage() {
   const router = useRouter();
   const [input, setInput] = useState("");
-  const [result, setResult] = useState<
-    null | (typeof showcaseData)[number] | false
-  >(null);
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const found = showcaseData.find((card) => card.image === input.trim());
-    setResult(found || false);
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const data = await verifyImageUrl(input.trim());
+      if (data.exists) {
+        setResult({
+          tweet: {
+            id: data.tweetId,
+            text: data.tweetContent || "",
+            user: {
+              id: data.author?.userId,
+              displayName: data.author?.username,
+            },
+            public_metrics: data.publicMetrics || {},
+          },
+          transactionId: data.transactionId,
+          timestamp: data.archivedAt,
+          image: data.imageUrl,
+        });
+      } else {
+        setResult(false);
+      }
+    } catch (e: any) {
+      setError(e.message || "Failed to verify image");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -79,17 +105,20 @@ export default function VerifyPage() {
                   fontFamily: "Comic Sans MS, cursive, sans-serif",
                   letterSpacing: "0.01em",
                 }}
+                disabled={loading}
               />
               <button
                 type="submit"
                 className="px-5 sm:px-8 py-1.5 sm:py-2 rounded-full bg-[#ffe066] text-[#ffb347] font-extrabold border-2 sm:border-4 border-[#ffb347] shadow-[2px_2px_0_#ffb347] hover:bg-[#ffb347] hover:text-white hover:scale-105 transition-all duration-150 text-base sm:text-lg mt-2"
                 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}
+                disabled={loading || !input.trim()}
               >
-                Verify
+                {loading ? "Verifying..." : "Verify"}
               </button>
             </form>
           </div>
           {/* Result Section */}
+          {error && <div className="mt-6 text-red-500 font-bold">{error}</div>}
           {result !== null && result !== false && (
             <div className="mt-10 flex flex-col items-center w-full max-w-lg relative">
               {/* Floating Badge */}
@@ -107,7 +136,7 @@ export default function VerifyPage() {
                 transactionId={result.transactionId}
                 timestamp={result.timestamp}
                 image={result.image}
-                username={result.username}
+                username={result.tweet.user.displayName}
               />
             </div>
           )}
