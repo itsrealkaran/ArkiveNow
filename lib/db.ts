@@ -5,10 +5,12 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-export async function query(text: string, params?: any[]) {
+export async function query(text: string, params?: unknown[]) {
   const client = await pool.connect();
   try {
-    const res = await client.query(text, params);
+    const res = params !== undefined
+      ? await client.query(text, params)
+      : await client.query(text);
     return res;
   } finally {
     client.release();
