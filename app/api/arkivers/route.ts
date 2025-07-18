@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 
 const PAGE_LIMIT = 20;
 
-function buildCursor(row: any) {
+function buildCursor(row: { archived_count: number; author_id: string }) {
   return Buffer.from(`${row.archived_count || 0}|${row.author_id}`).toString('base64');
 }
 
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const cursor = searchParams.get('cursor');
 
   let cursorClause = '';
-  let params: any[] = [];
+  const params: (number | string)[] = [];
 
   if (cursor) {
     const c = parseCursor(cursor);
@@ -45,12 +45,18 @@ export async function GET(req: NextRequest) {
   const result = await query(sql, params);
   const rows = result.rows;
 
-  const data = rows.slice(0, limit).map((row: any) => ({
+  const data = rows.slice(0, limit).map((row: {
+    author_id: string;
+    name: string;
+    username: string;
+    profile_image_url: string;
+    archived_count: string | number;
+  }) => ({
     userId: row.author_id,
     name: row.name,
     username: row.username,
     profileImageUrl: row.profile_image_url,
-    archivedCount: parseInt(row.archived_count, 10),
+    archivedCount: parseInt(row.archived_count as string, 10),
   }));
 
   let nextCursor = null;
