@@ -1,8 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// GET /api/tweets/verifyimageurl?url=...
 export async function GET(req: NextRequest) {
-  // TODO: Parse query param: url
-  // TODO: Check DB for image URL, return details if found
-  return NextResponse.json({ exists: false });
+  const { searchParams } = new URL(req.url);
+  const url = searchParams.get('url');
+  if (!url) {
+    return NextResponse.json({ exists: false });
+  }
+
+  // Extract arweave_id from the URL
+  const match = url.match(/arweave\.net\/(\w+)/);
+  const arweaveId = match ? match[1] : null;
+  if (!arweaveId) {
+    return NextResponse.json({ exists: false });
+  }
+
+  const sql = `
+    SELECT t.tweet_id, t.screenshot_arweave_id, t.screenshot_created_at, t.author_id, u.username, u.name, u.profile_image_url
+    FROM tweets t
+    LEFT JOIN users u ON t.author_id = u.author_id
+    WHERE t.screenshot_arweave_id = $1
+    LIMIT 1
+  `;
+  const result = await query(sql, [arweaveId]);
+  const row = result.rows[0];
+
+  if (!row) {
+    return NextResponse.json({ exists: false });
+  }
+
+  return NextResponse.json({
+    exists: true,
+    tweetId: row.tweet_id,
+    transactionId: row.screenshot_arweave_id,
+    imageUrl: `https://arweave.net/${row.screenshot_arweave_id}`,
+    archivedAt: row.screenshot_created_at,
+    author: {
+      userId: row.author_id,
+      username: row.username,
+      name: row.name,
+      profileImageUrl: row.profile_image_url,
+    },
+  });
 } 
