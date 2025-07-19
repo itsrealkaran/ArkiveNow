@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Search } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ShowcaseCard } from "@/component/explore/tweet";
 import Header from "@/component/explore/header";
 import { useRouter } from "next/navigation";
@@ -49,17 +49,66 @@ export default function Home() {
   const [selected, setSelected] = useState("Latest");
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [searchActive, setSearchActive] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const columnCount = useColumnCount();
   const router = useRouter();
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Intersection Observer for infinite scroll
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          loadMoreTweets();
+        }
+      });
+      if (node) observerRef.current.observe(node);
+    },
+    [hasMore, loadingMore, loading]
+  );
+
+  const loadMoreTweets = async () => {
+    if (!hasMore || loadingMore || loading) return;
+
+    setLoadingMore(true);
+    try {
+      let data;
+      if (searchActive && search.trim()) {
+        data = await searchTweets(search.trim(), { cursor: nextCursor });
+      } else {
+        data = await fetchTweets({
+          sort: FILTER_TO_SORT[selected],
+          cursor: nextCursor,
+        });
+      }
+
+      if (data.data && data.data.length > 0) {
+        setTweets((prev) => [...prev, ...data.data]);
+        setNextCursor(data.nextCursor);
+        setHasMore(!!data.nextCursor);
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load more tweets");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
     async function loadTweets() {
       setLoading(true);
       setError(null);
+      setHasMore(true);
+      setNextCursor(null);
       try {
         let data;
         if (searchActive && search.trim()) {
@@ -67,7 +116,11 @@ export default function Home() {
         } else {
           data = await fetchTweets({ sort: FILTER_TO_SORT[selected] });
         }
-        if (!ignore) setTweets(data.data || []);
+        if (!ignore) {
+          setTweets(data.data || []);
+          setNextCursor(data.nextCursor);
+          setHasMore(!!data.nextCursor);
+        }
       } catch (e) {
         if (!ignore)
           setError(e instanceof Error ? e.message : "Failed to load tweets");
@@ -80,6 +133,15 @@ export default function Home() {
       ignore = true;
     };
   }, [selected, searchActive, search]);
+
+  // Cleanup observer on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   // Split into columns
   const columns: Tweet[][] = Array.from({ length: columnCount }, () => []);
@@ -221,6 +283,16 @@ export default function Home() {
                 </div>
               ))}
             </div>
+          )}
+          {/* Loading more indicator */}
+          {loadingMore && (
+            <div className="flex items-center justify-center py-4 text-[#71afd4] font-bold">
+              Loading more tweets...
+            </div>
+          )}
+          {/* Intersection observer target */}
+          {hasMore && !loading && (
+            <div ref={lastElementRef} className="h-4 w-full" />
           )}
           {/* Empty State */}
           {!loading && !error && tweets.length === 0 && (

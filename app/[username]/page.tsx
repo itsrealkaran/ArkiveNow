@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Header from "@/component/explore/header";
 import { ShowcaseCard } from "@/component/explore/tweet";
@@ -63,7 +63,54 @@ export default function UserProfilePage() {
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [selectedTab, setSelectedTab] = useState("Latest");
   const [userLoading, setUserLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const columnCount = useColumnCount();
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Intersection Observer for infinite scroll
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !loadingMore &&
+          !userLoading
+        ) {
+          loadMoreTweets();
+        }
+      });
+      if (node) observerRef.current.observe(node);
+    },
+    [hasMore, loadingMore, userLoading]
+  );
+
+  const loadMoreTweets = async () => {
+    if (!hasMore || loadingMore || userLoading || !safeUsername) return;
+
+    setLoadingMore(true);
+    try {
+      const data = await fetchUserTweets(safeUsername, {
+        sort: FILTER_TO_SORT[selectedTab],
+        cursor: nextCursor,
+      });
+
+      if (data.data && data.data.length > 0) {
+        setTweets((prev) => [...prev, ...data.data]);
+        setNextCursor(data.nextCursor);
+        setHasMore(!!data.nextCursor);
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      console.error("Failed to load more tweets:", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -87,11 +134,17 @@ export default function UserProfilePage() {
   useEffect(() => {
     let ignore = false;
     async function loadTweets() {
+      setHasMore(true);
+      setNextCursor(null);
       try {
         const data = await fetchUserTweets(safeUsername, {
           sort: FILTER_TO_SORT[selectedTab],
         });
-        if (!ignore) setTweets(data.data || []);
+        if (!ignore) {
+          setTweets(data.data || []);
+          setNextCursor(data.nextCursor);
+          setHasMore(!!data.nextCursor);
+        }
       } catch {
         // ignore
       } finally {
@@ -102,6 +155,15 @@ export default function UserProfilePage() {
       ignore = true;
     };
   }, [safeUsername, selectedTab]);
+
+  // Cleanup observer on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   // Split into columns
   const columns: Tweet[][] = Array.from({ length: columnCount }, () => []);
@@ -243,6 +305,16 @@ export default function UserProfilePage() {
                   </div>
                 ))}
               </div>
+              {/* Loading more indicator */}
+              {loadingMore && (
+                <div className="flex items-center justify-center py-4 text-[#71afd4] font-bold">
+                  Loading more tweets...
+                </div>
+              )}
+              {/* Intersection observer target */}
+              {hasMore && !userLoading && (
+                <div ref={lastElementRef} className="h-4 w-full" />
+              )}
             </div>
           ) : (
             <div className="bg-[#fffbe9]/90 border-2 border-[#ffe066] rounded-2xl px-8 py-10 shadow-[2px_4px_0_#ffe066,0_2px_16px_rgba(255,224,102,0.10)] text-center max-w-md w-full mt-10">
