@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/component/explore/header";
 import { fetchArkivers } from "@/lib/api";
@@ -18,16 +18,61 @@ export default function ArkiversPage() {
   const router = useRouter();
   const [arkivers, setArkivers] = useState<Arkiver[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Intersection Observer for infinite scroll
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          loadMoreArkivers();
+        }
+      });
+      if (node) observerRef.current.observe(node);
+    },
+    [hasMore, loadingMore, loading]
+  );
+
+  const loadMoreArkivers = async () => {
+    if (!hasMore || loadingMore || loading) return;
+
+    setLoadingMore(true);
+    try {
+      const data = await fetchArkivers({ cursor: nextCursor });
+
+      if (data.data && data.data.length > 0) {
+        setArkivers((prev) => [...prev, ...data.data]);
+        setNextCursor(data.nextCursor);
+        setHasMore(!!data.nextCursor);
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load more arkivers");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
     async function loadArkivers() {
       setLoading(true);
       setError(null);
+      setHasMore(true);
+      setNextCursor(null);
       try {
         const data = await fetchArkivers();
-        if (!ignore) setArkivers(data.data || []);
+        if (!ignore) {
+          setArkivers(data.data || []);
+          setNextCursor(data.nextCursor);
+          setHasMore(!!data.nextCursor);
+        }
       } catch (e) {
         if (!ignore)
           setError(e instanceof Error ? e.message : "Failed to load arkivers");
@@ -38,6 +83,15 @@ export default function ArkiversPage() {
     loadArkivers();
     return () => {
       ignore = true;
+    };
+  }, []);
+
+  // Cleanup observer on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
   }, []);
 
@@ -140,6 +194,19 @@ export default function ArkiversPage() {
                     </div>
                   </div>
                 ))}
+                {/* Loading more indicator */}
+                {loadingMore && (
+                  <div className="col-span-full flex items-center justify-center py-8 text-[#71afd4] font-bold">
+                    Loading more arkivers...
+                  </div>
+                )}
+                {/* Intersection observer target */}
+                {hasMore && !loading && (
+                  <div
+                    ref={lastElementRef}
+                    className="col-span-full h-4 w-full"
+                  />
+                )}
               </div>
             )}
           </div>
