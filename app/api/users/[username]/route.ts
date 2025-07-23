@@ -5,7 +5,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   const { username } = await params;
   const sql = `
     SELECT u.author_id, u.name, u.username, u.profile_image_url, u.verified, u.created_at,
-      (SELECT COUNT(*) FROM tweets t WHERE t.author_id = u.author_id AND t.screenshot_arweave_id IS NOT NULL) as count
+      (SELECT COUNT(*) FROM tweets t WHERE t.username = u.username AND t.screenshot_arweave_id IS NOT NULL) as count
     FROM users u
     WHERE u.username = $1
     LIMIT 1
