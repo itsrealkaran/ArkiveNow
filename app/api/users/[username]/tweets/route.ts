@@ -88,7 +88,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   const sql = `
     SELECT t.tweet_id, t.screenshot_arweave_id, t.screenshot_created_at, t.created_at, t.text, t.public_metrics, u.username
     FROM tweets t
-    LEFT JOIN users u ON t.author_id = u.author_id
+    LEFT JOIN users u ON t.username = u.username
     WHERE ${where} ${cursorClause}
     ORDER BY ${orderBy}
     LIMIT $${paramsArr.length + 1}

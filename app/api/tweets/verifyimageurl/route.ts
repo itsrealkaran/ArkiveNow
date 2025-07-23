@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const sql = `
     SELECT t.tweet_id, t.screenshot_arweave_id, t.screenshot_created_at, t.author_id, u.username, u.name, u.profile_image_url
     FROM tweets t
-    JOIN users u ON t.author_id = u.author_id
+    JOIN users u ON t.username = u.username
     WHERE t.screenshot_arweave_id = $1
     LIMIT 1
   `;
